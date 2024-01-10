@@ -26,3 +26,17 @@ func TestLineToarray(t *testing.T) {
 		}
 	}
 }
+
+
+func TestSymboleLoc(t * testing.T){
+	var arr = []rune{46,46,46,36,46,42,46,46,46,46}
+
+	got := symboleLoc(arr)
+
+	var want = []int{3, 5} 
+
+	if len(got) != len(want){
+		t.Errorf("got %q, wanted %q", got, want)
+	}
+
+}

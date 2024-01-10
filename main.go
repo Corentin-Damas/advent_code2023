@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 
-	day2 "github.com/Corentin-Damas/advent_code2023/Day2"
+	day3 "github.com/Corentin-Damas/advent_code2023/Day3"
 )
 
 func main() {
 	fmt.Println("Welcome to Corentin's advent of code 2023")
-	result := day2.Day2p2result()
+	result := day3.Day3result()
 	fmt.Printf("%v\n", result )
 }

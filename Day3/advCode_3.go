@@ -1,13 +1,14 @@
 package day3
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 	"unicode"
+
+	// "strconv"
+	"golang.org/x/exp/slices"
 )
 
 // Any number adjacent to a symbol, even diagonally, is a "part number"
@@ -29,6 +30,8 @@ func Day3result() int {
 
 func analyseText(s string) int {
 	var partNumbers []int
+	var symboleArrLoc []int
+	var lenArray int
 	accumulator := 0
 	arrFullText := [][]rune{}
 
@@ -36,32 +39,66 @@ func analyseText(s string) int {
 
 	// Decompose the text into an array or array to have a 2D representation of the puzzle
 	for _, line := range lines {
-		arr := lineToarray(line)
+		arr, lengthArray := lineToarray(line)
+		lenArray = lengthArray
 		arrFullText = append(arrFullText, arr)
 	}
 
-	// Analyse line by line, if a symbole is found look at the 9 directions if a num is there
-	for idx, arr := range arrFullText {
+	var dummySlice = []rune{}
+	for i := 0; i < lenArray; i++ {
+		dummySlice = append(dummySlice, 46)
+	}
 
+	// fmt.Println("full text:")
+	// fmt.Println(arrFullText)
+
+	// Analyse line by line, if a symbole is found look at the 9 directions if a num is there
+	for idx, linearr := range arrFullText {
 		// symboleLoc get back an []int with the idx of the symboles in a line // Colomn idx
-		symboleArrLoc := symboleLoc(arr)
+		symboleArrLoc = symboleLoc(linearr)
+
 		if len(symboleArrLoc) != 0 {
+
 			for _, symbol := range symboleArrLoc {
 
 				sliceFullText := [][]rune{}
+				sliceSquare := [][]rune{}
 
-				if idx > 0 {
-					sliceFullText = arrFullText[idx-1 : idx+1]
+				// Line slice
+				if idx > 0 && idx < len(arrFullText)-1 {
+					sliceFullText = arrFullText[idx-1 : idx+2]
 				}
 
 				if idx == 0 {
-					sliceFullText = arrFullText[idx : idx+1]
+
+					TempSlice := arrFullText[idx : idx+2]
+					firstLine := TempSlice[0]
+					secondLine := TempSlice[1]
+					sliceFullText = [][]rune{}
+					sliceFullText = append(sliceFullText, dummySlice)
+					sliceFullText = append(sliceFullText, firstLine)
+					sliceFullText = append(sliceFullText, secondLine)
 				}
 				if idx == len(arrFullText)-1 {
-					sliceFullText = arrFullText[idx-1 : idx]
+					TempSlice := arrFullText[idx-1 : idx+1]
+					firstLine := TempSlice[0]
+					secondLine := TempSlice[1]
+					sliceFullText = [][]rune{}
+					sliceFullText = append(sliceFullText, firstLine)
+					sliceFullText = append(sliceFullText, secondLine)
+					sliceFullText = append(sliceFullText, dummySlice)
 				}
-				numVicinity := numsAroundSymbol(idx, symbol, sliceFullText) // line: idx, column: symbol
-				println(numVicinity)
+
+				// col Slice
+				if symbol > 0 && symbol < lenArray {
+					for _, line := range sliceFullText {
+						line = line[symbol-1 : symbol+2]
+						sliceSquare = append(sliceSquare, line)
+					}
+				}
+
+				// will always send the line up and down (no need to send the line) because it will be always in the middle
+				numsAroundSymbol(symbol, sliceSquare, sliceFullText) // column: symbol 
 			}
 		}
 	}
@@ -73,54 +110,52 @@ func analyseText(s string) int {
 	return accumulator
 }
 
-func lineToarray(s string) []rune {
+func lineToarray(s string) ([]rune, int) {
 	arr := []rune{}
 
 	for _, char := range s {
+		if char == 13 {
+			continue
+		}
 		arr = append(arr, char)
 	}
-	fmt.Println(arr)
+	lenArray := len(arr)
 
-	return arr
+	return arr, lenArray
 }
 
 func symboleLoc(arr []rune) []int {
 	passChar := "0123456789."
+	var checkChar = []rune{}
+	for _, c := range passChar {
+		checkChar = append(checkChar, c)
+	}
+
 	symbolLoc := []int{}
 
 	for idx, char := range arr {
-		for _, p := range passChar {
-			if char != p {
-				symbolLoc = append(symbolLoc, idx)
+		if !slices.Contains(checkChar, char) {
+			symbolLoc = append(symbolLoc, idx)
 
-			}
 		}
+
 	}
 	return symbolLoc
 }
 
-// numsAroundSymbol recive a coordniate of a symbole we should check all 9 location around
-// But also take care if it's in a corner
-func numsAroundSymbol(line int, col int, mapText [][]rune) []int {
+// numsAroundSymbol recive a 9x9 square with the symbole in the middle
+// it also receive the line up and below
+func numsAroundSymbol(col int, map3by3 [][]rune, mapText [][]rune) []int {
 	potentialNums := []int{}
-	lineTocheck := len(mapText)
 
-	if lineTocheck == 2 && col != len(mapText[0]) && col != 0 { // Proced normally
-		for x := 0; x >= 1; x-- { // Line
-			for y := -1; y <= 1; y-- { // Cols
-				err, locX, locY := is_Number(mapText[line+x][col+y], line+x, col+y)
-			}
-		}
-
-	}
-
-	if lineTocheck == 3 && col != len(mapText[0]) && col != 0 { // // Proced normally
-		for x := -1; x >= 1; x++ { // Line
-			for y := -1; y <= 1; y-- { // Cols
-				err, locX, locY := is_Number(mapText[line+x][col+y], line+x, col+y)
-				if err == nil {
-					number := checkFullNumber(mapText, locX, locY)
+	for i:= 0; i <3; i++ { // Line
+		for j:= 0; j <3; j++{ // Cols
+			if i != 1 && j != 1{ // Insure that we are not re analysing the symbole in the middle 
+				is_num := is_Number(map3by3[i][j]) // Make sure we found a number and not an other symbole
+				if is_num {
+					number := checkFullNumber(mapText,i , col + (j-1)) //  col + (j-1) re caliber the y into the full length array 
 					potentialNums = append(potentialNums, number)
+
 				}
 			}
 		}
@@ -129,25 +164,29 @@ func numsAroundSymbol(line int, col int, mapText [][]rune) []int {
 	return potentialNums
 }
 
-func is_Number(r rune, line int, col int) (error, int, int) {
+func is_Number(r rune) bool {
+
 	is_int := unicode.IsDigit(r)
 	if is_int {
-		return nil, line, col
-	} else {
-		return errors.New("not a num"), 0, 0
+		return true
 	}
-
+	return false
 }
 
 func checkFullNumber(mapText [][]rune, line int, col int) int {
+	// We have found a potential number now we want to map this number by checking bedore and after it
+	// if there is other number 
+	// Then we need to found a signature to make sure it's unique and we are not checking it multiple time
+
+
 
 }
 
-func convertStrtoInt(s string) int {
-	i, err := strconv.Atoi(s)
-	if err != nil {
-		log.Fatal(err)
-	}
+// func convertStrtoInt(s string) int {
+// 	i, err := strconv.Atoi(s)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
 
-	return i
-}
+// 	return i
+// }
