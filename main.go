@@ -8,6 +8,6 @@ import (
 
 func main() {
 	fmt.Println("Welcome to Corentin's advent of code 2023")
-	result := day3.Day3result()
+	result := day3.Day3temp2()
 	fmt.Printf("%v\n", result )
 }

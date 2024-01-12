@@ -1,7 +1,6 @@
 package day3
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -10,13 +9,19 @@ import (
 
 	"strconv"
 
-	"github.com/ydb-platform/ydb-go-sdk/v3/topic"
 	"golang.org/x/exp/slices"
 )
 
 // Any number adjacent to a symbol, even diagonally, is a "part number"
 // and should be included in your sum. (Periods (.) do not count as a symbol.)
 // add up all the part numbers
+
+type Bounds struct {
+	isNoTop   bool
+	isNoBot   bool
+	isNoLeft  bool
+	isNoRight bool
+}
 
 func Day3temp2() int {
 
@@ -26,72 +31,120 @@ func Day3temp2() int {
 		log.Fatal(err)
 	}
 	FullText := string(bytesText)
-	result := analyseText(FullText)
+	result := analyze(FullText)
 
 	fmt.Println("Day 3 result is : ")
 	return result
 }
 
 func analyze(s string) int {
-	arrFullText := [][]rune{}
 
 	var partNumbers []int
-	var numString string
-	var isNoTop bool
-	var isNoBot bool
-	var isNoLeft bool
-	var isNoRight bool
-	
+	var is_partNumber bool
+
+	directions := map[string][]int{
+		"topleft":  {-1, -1},
+		"topmid":   {-1, 0},
+		"topright": {-1, 1},
+		"midleft":  {0, -1},
+		"midright": {0, 1},
+		"botleft":  {1, -1},
+		"botmid":   {1, 0},
+		"botright": {1, 1},
+	}
+
+	mapbound := Bounds{
+		isNoTop:   false,
+		isNoBot:   false,
+		isNoLeft:  false,
+		isNoRight: false,
+	}
+
+	pMapBound := &mapbound
+
 	accumulator := 0
 
 	lines := strings.Split(s, "\n")
 	// Decompose the text into an array or array to have a 2D representation of the puzzle
-	arrFullText = puzzleMapToArr(lines)
+	arrFullText := puzzleMapToArr(lines)
+	pArrFullText := &arrFullText
+
+	var accStr string
 
 	for idxLine, linearr := range arrFullText {
 		for idxCol, potentialNum := range linearr {
+			// Init Reset Part
+			is_partNumber = false
+			mapbound.isNoTop = false
+			mapbound.isNoBot = false
+			mapbound.isNoLeft = false
+			mapbound.isNoRight = false
+
+			fmt.Println("current numbers; ", partNumbers)
+
 			found_number := rune_is_Number(potentialNum)
 
-			// If symbole turn "accepted number one" 
-			// if next rune is also a number check it too 
+			// If symbole turn "accepted number one"
+			// if next rune is also a number check it too
 
-			if found_number{
-				numString += string(arrFullText[idxLine][idxCol])
+			if found_number {
 
-				is_top := line_exist(arrFullText[idxLine-1])
-				if is_top != nil {
-					isNoTop = true
-				}
-				is_bot := line_exist(arrFullText[idxLine+1])
-				if is_bot != nil {
-					isNoBot = true
+				accStr += string(potentialNum)
+
+				fmt.Println(accStr)
+
+				if idxLine == 0 {
+					mapbound.isNoTop = true
 				}
 
-				is_left := col_exist(arrFullText[idxLine][idxCol-1])
-				if is_left != nil {
-					isNoLeft = true
+				if idxLine == len(arrFullText)-1 {
+					mapbound.isNoBot = true
 				}
-				is_right := col_exist(arrFullText[idxLine][idxCol+1])
-				if is_right != nil {
-					isNoRight = true
+
+				if idxCol == 0 {
+					mapbound.isNoLeft = true
 				}
-			
-				// Check all
 
+				if idxCol == len(linearr)-1 {
+					mapbound.isNoRight = true
+				}
 
-				// Need to check the surronding of that rune
-
+			} else {
+				continue
 			}
-			
 
+			if !is_partNumber {
+				fmt.Println("checking for partNumber", is_partNumber)
+				is_partNumber = check9around(pArrFullText, idxLine, idxCol, directions, pMapBound)
+			}
 
-		}
+			is_nextCharNum := checkNextChar(pArrFullText, idxLine, idxCol)
 
-		for _, num := range partNumbers {
-			accumulator += num
+			//FIXEME :  Bug here numbers are not splitting at the right moment
+
+			if is_nextCharNum {
+				// there is a next num
+				continue
+			}
+
+			// next Char is NOT a num
+
+			if is_partNumber {
+				// End of the Num -> hand the full number to the list of valid num
+				partNumbers = append(partNumbers, strtoInt(accStr))
+			} else {
+				// End of the Num && is not a part Number -> reset params
+				accStr = ""
+				is_partNumber = false
+			}
+
 		}
 
 	}
+	for _, num := range partNumbers {
+		accumulator += num
+	}
+
 	return accumulator
 }
 
@@ -117,7 +170,7 @@ func strToarray(s string) []rune {
 	return arr
 }
 
-// Check if a rune is a number 
+// Check if a rune is a number
 func rune_is_Number(r rune) bool {
 
 	is_int := unicode.IsDigit(r)
@@ -125,85 +178,72 @@ func rune_is_Number(r rune) bool {
 
 }
 
-// checkFullNum Give back 
-func checkFullNum(arr []rune, start int) (int, int) {
-	
-	var numString string
-	var idxNumEnd int
-
-	// Get the full number into a string (easier to concat)
-	for j := start; j <= len(arr)-1; j++ {
-		if is_Number(arr[j]) {
-			numString += string(arr[j])
-			idxNumEnd = j
-		} else {
-			break
-		}
+func rune_is_Symbole(r rune) bool {
+	notSymbole := "0123456789."
+	var checkChar = []rune{}
+	for _, char := range notSymbole {
+		checkChar = append(checkChar, char)
 	}
-	result := convertStrtoInt(numString)
-	 
-	return result, idxNumEnd
+
+	// True = the rune is or a num or a dot || False = symbole
+	is_num_or_dot := slices.Contains(checkChar, r)
+
+	// We want to return true if a symbole is found
+	return !is_num_or_dot
+
 }
 
-func line_exist(arr []rune) error{
-	if len(arr) > 0 {
-		return nil
-	}else {
-		return fmt.Errorf("Out of bound: Line")
-	}
-} 
-func col_exist(r rune) error{
-	if rune_is_Number(r) {
-		return nil
-	}else {
-		return fmt.Errorf("Out of bound: Col")
-	}
-} 
-
-
-
-
-// numsAroundSymbol recive a 9x9 square with the symbole in the middle
 // it also receive the line up and below
-func numsAroundSymbol(col int, map3by3 [][]rune, mapText [][]rune) []int {
-	// var tempMap map[int]int
-	potentialNums := []int{}
+func check9around(pFullMap *[][]rune, line int, col int, directions map[string][]int, bound *Bounds) bool {
 
-	var number int
+	is_symbole := true
+	fmt.Println("currently checking: ", string((*pFullMap)[line][col]))
 
-	for i := 0; i < 3; i++ { // Line
+	// directions := map[string][]int{
+	// 	"topleft":  {-1, -1},
+	// 	"topmid":   {-1, 0},
+	// 	"topright": {-1, 1},
+	// 	"midleft":  {0, -1},
+	// 	"midright": {0, 1},
+	// 	"botleft":  {1, -1},
+	// 	"botmid":   {1, 0},
+	// 	"botright": {1, 1},
+	// }
 
-		for j := 0; j < 3; j++ { // Cols
-			if is_Number(map3by3[i][j]) {
-				number = checkFullNumber(mapText[i], col+(j-1)) //  col + (j-1) re caliber the y into the full length array
+	for key, dir := range directions {
+		i := dir[0]
+		j := dir[1]
 
-				// Need to found a way to identify a number so that a number is not count 2time and
-				// Give the posibility to have 2 same number around the same symbole
-				is_already_found := numInSlice(number, potentialNums)
+		if bound.isNoTop && (key == "topleft" || key == "topmid" || key == "topright") {
+			continue
+		}
+		if bound.isNoBot && (key == "botleft" || key == "botmid" || key == "botright") {
+			continue
+		}
+		if bound.isNoLeft && (key == "botleft" || key == "midleft" || key == "topleft") {
+			continue
+		}
+		if bound.isNoRight && (key == "topright" || key == "midright" || key == "botright") {
+			continue
+		}
 
-				if !is_already_found {
-					potentialNums = append(potentialNums, number)
-				}
+		potentialRune := (*pFullMap)[line+i][col+j]
 
-			}
-
+		if rune_is_Symbole(potentialRune) {
+			fmt.Println("potential symbole ", potentialRune)
+			return is_symbole
 		}
 	}
-	return potentialNums
+	return !is_symbole
 }
 
-// checkFullNumber Receive an array of Rune with a starting possition, return the full number
+func checkNextChar(pFullMap *[][]rune, line int, col int) bool {
 
-func numInSlice(num int, list []int) bool {
-	for _, n := range list {
-		if n == num {
-			return true
-		}
-	}
-	return false
+	nextChar := (*pFullMap)[line][col+1]
+	return rune_is_Number(nextChar)
 }
 
-func convertStrtoInt(s string) int {
+func strtoInt(s string) int {
 	i, err := strconv.Atoi(s)
 	if err != nil {
 		log.Fatal(err)
@@ -211,5 +251,7 @@ func convertStrtoInt(s string) int {
 
 	return i
 }
+
+// checkFullNumber Receive an array of Rune with a starting possition, return the full number
 
 // should found 540887
