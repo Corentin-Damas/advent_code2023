@@ -27,6 +27,9 @@ func Day3result() int {
 	result := analyseText(FullText)
 
 	fmt.Println("Day 3 result is : ")
+	if result != 540212 {
+		fmt.Printf("incorrect result found %d, should have found 540212\n", result)
+	}
 	return result
 }
 

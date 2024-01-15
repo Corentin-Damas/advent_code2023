@@ -25,7 +25,7 @@ type Bounds struct {
 
 func Day3temp2() int {
 
-	bytesText, err := os.ReadFile("./Day3/datatest.txt")
+	bytesText, err := os.ReadFile("./Day3/data.txt")
 	// bytesText, err := os.ReadFile("./data.txt")
 	if err != nil {
 		log.Fatal(err)
@@ -68,19 +68,22 @@ func analyze(s string) int {
 	// Decompose the text into an array or array to have a 2D representation of the puzzle
 	arrFullText := puzzleMapToArr(lines)
 	pArrFullText := &arrFullText
+	var is_nextCharNum bool
 
 	var accStr string
+	is_partNumber = false
 
 	for idxLine, linearr := range arrFullText {
 		for idxCol, potentialNum := range linearr {
 			// Init Reset Part
-			is_partNumber = false
+			
 			mapbound.isNoTop = false
 			mapbound.isNoBot = false
 			mapbound.isNoLeft = false
 			mapbound.isNoRight = false
+			is_nextCharNum = false
 
-			fmt.Println("current numbers; ", partNumbers)
+			
 
 			found_number := rune_is_Number(potentialNum)
 
@@ -92,6 +95,7 @@ func analyze(s string) int {
 				accStr += string(potentialNum)
 
 				fmt.Println(accStr)
+				fmt.Println("current numbers; ", partNumbers)
 
 				if idxLine == 0 {
 					mapbound.isNoTop = true
@@ -114,29 +118,30 @@ func analyze(s string) int {
 			}
 
 			if !is_partNumber {
-				fmt.Println("checking for partNumber", is_partNumber)
 				is_partNumber = check9around(pArrFullText, idxLine, idxCol, directions, pMapBound)
 			}
 
-			is_nextCharNum := checkNextChar(pArrFullText, idxLine, idxCol)
+			if idxCol < len(linearr)-1 {
+				is_nextCharNum = checkNextChar(pArrFullText, idxLine, idxCol)
+			}
 
 			//FIXEME :  Bug here numbers are not splitting at the right moment
 
 			if is_nextCharNum {
 				// there is a next num
 				continue
-			}
+			} 
 
 			// next Char is NOT a num
 
-			if is_partNumber {
+			if is_partNumber && !is_nextCharNum {
 				// End of the Num -> hand the full number to the list of valid num
 				partNumbers = append(partNumbers, strtoInt(accStr))
-			} else {
-				// End of the Num && is not a part Number -> reset params
-				accStr = ""
-				is_partNumber = false
 			}
+			
+			// End of the Num && is not a part Number -> reset params
+			accStr = ""
+			is_partNumber = false
 
 		}
 
@@ -239,8 +244,10 @@ func check9around(pFullMap *[][]rune, line int, col int, directions map[string][
 
 func checkNextChar(pFullMap *[][]rune, line int, col int) bool {
 
+
 	nextChar := (*pFullMap)[line][col+1]
 	return rune_is_Number(nextChar)
+
 }
 
 func strtoInt(s string) int {
