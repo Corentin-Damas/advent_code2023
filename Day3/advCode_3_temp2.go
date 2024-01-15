@@ -75,27 +75,20 @@ func analyze(s string) int {
 
 	for idxLine, linearr := range arrFullText {
 		for idxCol, potentialNum := range linearr {
-			// Init Reset Part
-			
+			// Init & Reset Part
 			mapbound.isNoTop = false
 			mapbound.isNoBot = false
 			mapbound.isNoLeft = false
 			mapbound.isNoRight = false
 			is_nextCharNum = false
 
-			
-
 			found_number := rune_is_Number(potentialNum)
 
 			// If symbole turn "accepted number one"
 			// if next rune is also a number check it too
-
 			if found_number {
 
 				accStr += string(potentialNum)
-
-				fmt.Println(accStr)
-				fmt.Println("current numbers; ", partNumbers)
 
 				if idxLine == 0 {
 					mapbound.isNoTop = true
@@ -125,24 +118,19 @@ func analyze(s string) int {
 				is_nextCharNum = checkNextChar(pArrFullText, idxLine, idxCol)
 			}
 
-			//FIXEME :  Bug here numbers are not splitting at the right moment
-
 			if is_nextCharNum {
 				// there is a next num
 				continue
-			} 
+			}
 
 			// next Char is NOT a num
-
 			if is_partNumber && !is_nextCharNum {
 				// End of the Num -> hand the full number to the list of valid num
 				partNumbers = append(partNumbers, strtoInt(accStr))
 			}
-			
-			// End of the Num && is not a part Number -> reset params
+			// End of the Num || is not a part Number -> reset params
 			accStr = ""
 			is_partNumber = false
-
 		}
 
 	}
@@ -177,10 +165,7 @@ func strToarray(s string) []rune {
 
 // Check if a rune is a number
 func rune_is_Number(r rune) bool {
-
-	is_int := unicode.IsDigit(r)
-	return is_int
-
+	return unicode.IsDigit(r)
 }
 
 func rune_is_Symbole(r rune) bool {
@@ -189,10 +174,8 @@ func rune_is_Symbole(r rune) bool {
 	for _, char := range notSymbole {
 		checkChar = append(checkChar, char)
 	}
-
 	// True = the rune is or a num or a dot || False = symbole
 	is_num_or_dot := slices.Contains(checkChar, r)
-
 	// We want to return true if a symbole is found
 	return !is_num_or_dot
 
@@ -202,19 +185,6 @@ func rune_is_Symbole(r rune) bool {
 func check9around(pFullMap *[][]rune, line int, col int, directions map[string][]int, bound *Bounds) bool {
 
 	is_symbole := true
-	fmt.Println("currently checking: ", string((*pFullMap)[line][col]))
-
-	// directions := map[string][]int{
-	// 	"topleft":  {-1, -1},
-	// 	"topmid":   {-1, 0},
-	// 	"topright": {-1, 1},
-	// 	"midleft":  {0, -1},
-	// 	"midright": {0, 1},
-	// 	"botleft":  {1, -1},
-	// 	"botmid":   {1, 0},
-	// 	"botright": {1, 1},
-	// }
-
 	for key, dir := range directions {
 		i := dir[0]
 		j := dir[1]
@@ -233,9 +203,7 @@ func check9around(pFullMap *[][]rune, line int, col int, directions map[string][
 		}
 
 		potentialRune := (*pFullMap)[line+i][col+j]
-
 		if rune_is_Symbole(potentialRune) {
-			fmt.Println("potential symbole ", potentialRune)
 			return is_symbole
 		}
 	}
@@ -243,7 +211,6 @@ func check9around(pFullMap *[][]rune, line int, col int, directions map[string][
 }
 
 func checkNextChar(pFullMap *[][]rune, line int, col int) bool {
-
 
 	nextChar := (*pFullMap)[line][col+1]
 	return rune_is_Number(nextChar)
@@ -258,7 +225,3 @@ func strtoInt(s string) int {
 
 	return i
 }
-
-// checkFullNumber Receive an array of Rune with a starting possition, return the full number
-
-// should found 540887
