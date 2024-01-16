@@ -234,10 +234,10 @@ func checkAroundStar(pFullMap *[][]rune, line int, col int, directions map[strin
 
 	gearArr := []int{}
 	key_arr := []int{}
-	orderedKey := []int{}
 	maxLine := len((*pFullMap))
 	maxCol := len((*pFullMap)[line])
 	var strKey string
+	var orderedKey []int
 
 	starBound := Bounds{}
 	pStarBound := &starBound
