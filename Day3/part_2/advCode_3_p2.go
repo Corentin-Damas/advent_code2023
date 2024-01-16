@@ -28,7 +28,7 @@ type Bounds struct {
 
 func Day3part2() int {
 
-	bytesText, err := os.ReadFile("./Day3/datatest.txt")
+	bytesText, err := os.ReadFile("./Day3/data.txt")
 	// bytesText, err := os.ReadFile("./data.txt")
 	if err != nil {
 		log.Fatal(err)
@@ -36,7 +36,7 @@ func Day3part2() int {
 	FullText := string(bytesText)
 	result := analyze(FullText)
 
-	fmt.Println("Day 3 result is : ")
+	fmt.Println("Day 3 part 2 result is : ")
 	return result
 }
 
@@ -48,7 +48,8 @@ func analyze(s string) int {
 	var accumulator int = 0
 	var gear_acc int = 0
 	var accStr string
-	var speGear map[string][]int
+	speGear := make(map[string][]int)
+
 	pSpeGear := &speGear
 
 	directions := map[string][]int{
@@ -218,9 +219,11 @@ func check9around(pFullMap *[][]rune, line int, col int, directions map[string][
 
 			if len(gearArr) != 2 {
 				return is_symbole
+			} else {
+				new_tuple(speGear, gearArr, key_arr)
+
 			}
 
-			new_tuple(speGear, gearArr, key_arr)
 		}
 	}
 
@@ -234,6 +237,7 @@ func checkAroundStar(pFullMap *[][]rune, line int, col int, directions map[strin
 	orderedKey := []int{}
 	maxLine := len((*pFullMap))
 	maxCol := len((*pFullMap)[line])
+	var strKey string
 
 	starBound := Bounds{}
 	pStarBound := &starBound
@@ -250,23 +254,26 @@ func checkAroundStar(pFullMap *[][]rune, line int, col int, directions map[strin
 		}
 
 		r := (*pFullMap)[line+i][col+j]
+
 		is_num := rune_is_Number(r)
 
 		if is_num {
 			f_num, num_key := full_number(pFullMap, line+i, col+j)
 
+			fmt.Println("checking number", f_num, "in: ", line+i, col+j)
+
 			if !slices.Contains(key_arr, num_key) {
 				key_arr = append(key_arr, num_key)
+				gearArr = append(gearArr, f_num)
 			}
-
-			gearArr = append(gearArr, f_num)
 		}
 	}
+
 	if len(key_arr) == 2 {
 		orderedKey = order2Key(key_arr)
+		strKey = intToStr(orderedKey[0]) + "_" + intToStr(orderedKey[1])
 	}
-	strKey := intToStr(orderedKey[0]) + "_" + intToStr(orderedKey[1])
-	fmt.Println("found new tuple; ", gearArr, strKey)
+
 	return gearArr, strKey
 }
 
@@ -302,12 +309,6 @@ func full_number(pFullMap *[][]rune, line int, start_col int) (int, int) {
 }
 
 func new_tuple(speGear *map[string][]int, tuple []int, key string) {
-	for _, arr := range *speGear {
-		if slices.Contains(arr, tuple[0]) && slices.Contains(arr, tuple[1]) {
-			return
-		}
-	}
-
 	(*speGear)[key] = tuple
 }
 
