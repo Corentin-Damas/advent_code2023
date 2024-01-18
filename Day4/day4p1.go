@@ -6,7 +6,6 @@ import (
 	"math"
 	"os"
 	"strings"
-
 	"strconv"
 
 	"golang.org/x/exp/slices"
@@ -91,5 +90,3 @@ func strtoInt(s string) (int, error) {
 	}
 	return i, nil
 }
-
-// should found 32001
