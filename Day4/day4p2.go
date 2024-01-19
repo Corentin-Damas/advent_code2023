@@ -82,7 +82,7 @@ func extractLine(line string) (int, []int, []int) {
 	return trimedCardId, strToArr(winningNums), strToArr(onGameNums)
 }
 
-func trimId (s string) int {
+func trimId(s string) int {
 	strAcc := ""
 	for _, char := range s{
 		if string(char) == " " || string(char) == ""{
