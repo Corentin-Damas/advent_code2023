@@ -11,3 +11,4 @@ I'll focus to train for the Go programing language in the first time.
 ### Not finished
 
 - Day 12 : Recursion with a slice out of bound to fix // Solution Found with Python
+- Day 13 : Part 2 not completed// Solution Found with Python
