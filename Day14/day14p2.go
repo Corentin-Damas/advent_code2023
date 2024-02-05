@@ -14,7 +14,7 @@ var member void
 func Day14p2() int {
 
 	// cardsMapValues := createCards()
-	bytesText, err := os.ReadFile("./Day14/datatest.txt")
+	bytesText, err := os.ReadFile("./Day14/data.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -23,7 +23,7 @@ func Day14p2() int {
 
 	result := analyzep2(puzzle)
 
-	fmt.Println("Day 14 part 2 : ")
+	fmt.Println("Day 14 part 2  sould foind 112452: ")
 	return result
 }
 
