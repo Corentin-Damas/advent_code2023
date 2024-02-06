@@ -13,3 +13,4 @@ I'll focus to train for the Go programing language in the first time.
 - Day 12 : Recursion with a slice out of bound to fix // Solution Found with Python
 - Day 13 : Part 2 not completed// Solution Found with Python
 - Day 14 : Part 2 bug where the array collector at some point stop collecting the right next arr and keep push the same one
+- Day 17 : Dijkstra's to emplement 
