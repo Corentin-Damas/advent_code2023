@@ -110,8 +110,3 @@ func strtoInt(s string) int {
 	return i
 }
 
-func printGrid(grid [][]string) {
-	for _, line := range grid {
-		fmt.Println(line)
-	}
-}
